@@ -10,10 +10,10 @@ namespace ImmutableTrie
     /// <summary>
     /// Gets an empty immutable list.
     /// </summary>
-    public static readonly ImmutableTrieList<T> Empty = new ImmutableTrieList<T>(0, BITS, null, Node.Empty);
+    public static readonly ImmutableTrieList<T> Empty = new ImmutableTrieList<T>(0, 0, 0, BITS, null, Node.Empty);
 
-    internal ImmutableTrieList(int count, int shift, Node root, Node tail)
-      : base(count, shift, root, tail)
+    internal ImmutableTrieList(int origin, int capacity, int count, int shift, Node root, Node tail)
+      : base(origin, capacity, count, shift, root, tail)
     { }
 
     /// <summary>
@@ -21,7 +21,7 @@ namespace ImmutableTrie
     /// </summary>
     /// <param name="index">The index of the element to retrieve.</param>
     /// <returns>The element at the specified index.</returns>
-    public T this[int index] => this.GetItem(index);
+    public T this[int index] => GetItem(index);
 
     /// <summary>
     /// Searches a range of elements in the sorted <see cref="ImmutableTrieList{T}"/>
@@ -56,10 +56,86 @@ namespace ImmutableTrie
     {
       Requires.Range(index >= 0, nameof(index));
       Requires.Range(count >= 0, nameof(count));
-      Requires.Argument(index + count <= this.Count, nameof(count), "{0} + {1} must be less than or equal to {2}", nameof(index), nameof(count), nameof(this.Count));
+      Requires.Argument(index + count <= Count, nameof(count), "{0} + {1} must be less than or equal to {2}", nameof(index), nameof(count), nameof(Count));
 
       comparer = comparer ?? Comparer<T>.Default;
       return ListSortHelper<T>.Default.BinarySearch(this, index, count, item, comparer);
+    }
+
+    /// <summary>
+    /// Creates a shallow copy of a range of elements in the source <see cref="ImmutableTrieList{T}"/>.
+    /// </summary>
+    /// <param name="index">
+    /// The zero-based <see cref="ImmutableTrieList{T}"/> index at which the range
+    /// starts.
+    /// </param>
+    /// <param name="count">
+    /// The number of elements in the range.
+    /// </param>
+    /// <returns>
+    /// A shallow copy of a range of elements in the source <see cref="ImmutableTrieList{T}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="index"/> and <paramref name="count"/> do not denote a valid range in the <see cref="ImmutableTrieList{T}"/>.
+    /// </exception>
+    public override ImmutableTrieList<T> GetRange(int index, int count)
+    {
+      Requires.Range(index >= 0, nameof(index));
+      Requires.Range(count >= 0, nameof(count));
+      Requires.Argument(index + count <= Count, nameof(count), "{0} + {1} must be less than or equal to {2}", nameof(index), nameof(count), nameof(Count));
+
+      index += Origin;
+      int endIndex = index + count - 1;
+      int origin = index & MASK;
+      // Both start and end is in the tail
+      if (index >= TailOffset && endIndex >= TailOffset)
+      {
+        return new ImmutableTrieList<T>(origin, count + origin, count, BITS, null, this.Tail);
+      }
+
+      Node newRoot = Root;
+      Node newTail = Tail;
+      int newShift = Shift;
+
+      // Find new root node
+      int endIndexInTrie = endIndex >= TailOffset ? TailOffset - 1 : endIndex;
+      int subStart = (index >> newShift) & MASK;
+      int subEnd = (endIndexInTrie >> newShift) & MASK;
+      if (subStart == subEnd)
+      {
+        while (newShift > 0)
+        {
+          Node tempNode = (Node)newRoot.Array[subStart];
+          int tempShift = newShift - BITS;
+
+          subStart = (index >> tempShift) & MASK;
+          subEnd = (endIndexInTrie >> tempShift) & MASK;
+          if (subStart != subEnd)
+          {
+            break;
+          }
+
+          newRoot = tempNode;
+          newShift = tempShift;
+        }
+      }
+
+        // Move the node to the tail if the end if not currently in tail
+        if (endIndex < TailOffset)
+        {
+          newRoot = PopInNode(endIndex, newRoot, newShift, out newTail);
+          if (newShift > BITS && newRoot.Array[1] == null)
+          {
+            // PopInNode may result in extra root, so need to remove addition root
+            newRoot = (Node)newRoot[0];
+            newShift -= BITS;
+          }
+        }
+
+      return new ImmutableTrieList<T>(origin, count + origin, count, newShift, newRoot, newTail);
     }
 
     /// <summary>
@@ -71,45 +147,32 @@ namespace ImmutableTrie
     {
       Node newRoot;
       Node newTail;
-      int newShift = this.Shift;
+      int newShift = Shift;
 
-      if (this.Count - this.TailOffset < WIDTH)
+      if (Capacity - TailOffset < WIDTH)
       {
         // Add to tail if there's still room
-        newTail = this.Tail.Clone();
-        newTail[this.Count & MASK] = value;
-        return new ImmutableTrieList<T>(Count + 1, Shift, Root, newTail);
+        newTail = Tail.Clone();
+        newTail[Capacity & MASK] = value;
+        return new ImmutableTrieList<T>(Origin, Capacity + 1, Count + 1, newShift, Root, newTail);
       }
 
       // Root overflow
       // 1 << (Shift + BITS): max tree capacity
       // + WIDTH: add the tail capacity
-      if (this.Count == (1 << (this.Shift + BITS)) + WIDTH)
+      if (Capacity == (1 << (Shift + BITS)) + WIDTH)
       {
-        // Create new root node.
-        newRoot = Node.CreateNew();
-
-        // Create the new path from the tail
-        Node path = this.Tail;
-        for (int level = this.Shift; level > 0; level -= BITS)
-        {
-          Node newNode = Node.CreateNew();
-          newNode[0] = path;
-          path = newNode;
-          newShift += BITS;
-        }
-
-        newRoot[0] = this.Root;
-        newRoot[1] = path;
+        newRoot = CreateOverflowPath();
+        newShift += BITS;
       }
       else
       {
-        newRoot = AppendInNode(this.Root, this.Shift);
+        newRoot = AppendInNode(Root, Shift);
       }
 
       newTail = Node.CreateNew();
       newTail[0] = value;
-      return new ImmutableTrieList<T>(Count + 1, newShift, newRoot, newTail);
+      return new ImmutableTrieList<T>(Origin, Capacity + 1, Count + 1, newShift, newRoot, newTail);
     }
 
     /// <summary>
@@ -121,7 +184,7 @@ namespace ImmutableTrie
     /// </exception>
     public ImmutableTrieList<T> Pop()
     {
-      Requires.ValidState(this.Count > 0, "The list is empty");
+      Requires.ValidState(Count > 0, "The list is empty");
 
       if (Count == 1)
       {
@@ -129,23 +192,25 @@ namespace ImmutableTrie
         return ImmutableTrieList<T>.Empty;
       }
 
-      if (this.Count - 1 > this.TailOffset)
+      if (Capacity - 1 > TailOffset)
       {
         // Pop in tail
-        return new ImmutableTrieList<T>(this.Count - 1, this.Shift, this.Root, this.Tail);
+        return new ImmutableTrieList<T>(Origin, Capacity - 1, Count - 1, Shift, Root, Tail);
       }
 
+      // There is only one element in the tail
+      // so the index is the last element in the leave node
       Node newTail;
-      Node newRoot = PopInNode(this.Root, this.Shift, out newTail);
-      int newShift = this.Shift;
-      if (this.Shift > BITS && newRoot.Array[1] == null)
+      Node newRoot = PopInNode(Capacity - 2, Root, Shift, out newTail);
+      int newShift = Shift;
+      if (Shift > BITS && newRoot.Array[1] == null)
       {
         // PopInNode may result in extra root, so need to remove addition root
         newRoot = (Node)newRoot[0];
         newShift -= BITS;
       }
 
-      return new ImmutableTrieList<T>(this.Count - 1, newShift, newRoot, newTail);
+      return new ImmutableTrieList<T>(Origin, Capacity - 1, Count - 1, newShift, newRoot, newTail);
     }
 
     /// <summary>
@@ -157,17 +222,18 @@ namespace ImmutableTrie
     public ImmutableTrieList<T> SetItem(int index, T value)
     {
       CheckIndex(index);
+      index += Origin;
 
       // if we are setting the value in the tail
-      if (index >= this.TailOffset)
+      if (index >= TailOffset)
       {
-        Node newTail = this.Tail.Clone();
+        Node newTail = Tail.Clone();
         newTail[index & MASK] = value;
-        return new ImmutableTrieList<T>(Count, Shift, Root, newTail);
+        return new ImmutableTrieList<T>(Origin, Capacity, Count, Shift, Root, newTail);
       }
 
-      Node newRoot = SetItemInNode(this.Root, index, this.Shift, value);
-      return new ImmutableTrieList<T>(this.Count, this.Shift, newRoot, this.Tail);
+      Node newRoot = SetItemInNode(Root, index, Shift, value);
+      return new ImmutableTrieList<T>(Origin, Capacity, Count, Shift, newRoot, Tail);
     }
 
     /// <summary>

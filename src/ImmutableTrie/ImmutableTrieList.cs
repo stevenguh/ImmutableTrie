@@ -79,7 +79,6 @@ namespace ImmutableTrie
 
   public sealed partial class ImmutableTrieList<T> : ICollection<T>, IEnumerable<T>, IList<T>, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IEnumerable, IList, IImmutableList<T>
   {
-
     /// <summary>
     /// See the <see cref="IImmutableList{T}"/> interface.
     /// </summary>

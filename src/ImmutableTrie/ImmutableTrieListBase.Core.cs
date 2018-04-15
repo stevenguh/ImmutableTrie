@@ -18,18 +18,29 @@ namespace ImmutableTrie
 
     protected ImmutableTrieListBase(int count, int shift, Node root, Node tail)
     {
-      this.Count = count;
-      this.Shift = shift;
-      this.Root = root;
-      this.Tail = tail;
-      this.Owner = null;
+      Count = count;
+      Shift = shift;
+      Root = root;
+      Tail = tail;
+      Owner = null;
+    }
+
+    protected ImmutableTrieListBase(int origin, int capacity, int count, int shift, Node root, Node tail)
+    {
+      Origin = origin;
+      Capacity = capacity;
+      Count = count;
+      Shift = shift;
+      Root = root;
+      Tail = tail;
+      Owner = null;
     }
 
     /// <summary>
     /// Gets a value that indicates whether this list is empty.
     /// </summary>
     /// <value><c>true</c> if the list is empty; otherwise, <c>false</c>.</value>
-    public bool IsEmpty => this.Count == 0;
+    public bool IsEmpty => Count == 0;
 
     /// <summary>
     /// Gets the number of elements contained in the list.
@@ -37,23 +48,15 @@ namespace ImmutableTrie
     /// <value>The number of elements in the list.</value>
     public int Count { get; protected set; } // Setter is for the builder only
 
+    // count + origin
+    protected int Capacity { get; set; }
+    protected int Origin { get; set; }
     protected int Shift { get; set; } // Setter is for the builder only
     protected Node Root { get; set; } // Setter is for the builder only
     protected Node Tail { get; set; } // Setter is for the builder only
     protected object Owner { get; set; } // Builder use only
-    protected int TailOffset => Count < WIDTH ? 0 : ((Count - 1) >> BITS) << BITS;
-
-    protected static Node CreateNewPath(object owner, int level, Node node)
-    {
-      if (level == 0)
-      {
-        return node;
-      }
-
-      Node returnVal = new Node(owner);
-      returnVal.Array[0] = CreateNewPath(owner, level - BITS, node);
-      return returnVal;
-    }
+    protected int TailOffset =>
+      Capacity < WIDTH ? 0 : ((Capacity - 1) >> BITS) << BITS;
 
     /// <summary>
     /// Tests whether a value is one that might be found in this collection.
@@ -73,21 +76,22 @@ namespace ImmutableTrie
     internal T GetItem(int index)
     {
       CheckIndex(index);
-      Node node = this.GetNodeFor(index);
+      index += Origin;
+      Node node = GetNodeFor(index);
       return (T)node[index & MASK];
     }
 
     protected void CheckIndex(int index) =>
-      Requires.Range(index >= 0 && index < this.Count, nameof(index));
+      Requires.Range(index >= 0 && index < Count, nameof(index));
 
     protected Node GetNodeFor(int index)
     {
-      if (index >= this.TailOffset)
+      if (index >= TailOffset)
       {
-        return this.Tail;
+        return Tail;
       }
 
-      Node node = this.Root;
+      Node node = Root;
       for (int level = Shift; level > 0; level -= BITS)
       {
         node = (Node)node.Array[(index >> level) & MASK];
@@ -100,22 +104,23 @@ namespace ImmutableTrie
     {
       node = node ?? Node.Empty; // node can be null if there is no root use empty.
 
-      // Copy node for modifiation
-      int subIndex = ((this.Count - 1) >> level) & MASK;
+      int subIndex = ((Capacity - 1) >> level) & MASK;
       if (level == 0)
       {
-        return this.Tail;
+        return Tail;
       }
       else
       {
-        node = ensureEditable ? node.EnsureEditable(this.Owner) : node.Clone();
+        node = ensureEditable ? node.EnsureEditable(Owner) : node.Clone();
         node[subIndex] = AppendInNode((Node)node[subIndex], level - BITS, ensureEditable);
         return node;
       }
     }
 
-    protected Node PopInNode(Node node, int level, out Node newTail, bool ensureEditable = false)
+    protected Node PopInNode(int index, Node node, int level, out Node newTail, bool ensureEditable = false)
     {
+        node = node ?? Node.Empty; // node can be null if there is no root use empty.
+
       if (level == 0)
       {
         // Move the last leaf node to tail
@@ -124,12 +129,9 @@ namespace ImmutableTrie
         return null;
       }
 
-      // Assuming this method will only be called when there is only one element in the tail
-      // so the index is the last element in the leave node
-      int index = this.Count - 2;
       int subIndex = (index >> level) & MASK;
-      node = ensureEditable ? node.EnsureEditable(this.Owner) : node.Clone();
-      Node subNode = PopInNode((Node) node[subIndex], level - BITS, out newTail, ensureEditable);
+      node = ensureEditable ? node.EnsureEditable(Owner) : node.Clone();
+      Node subNode = PopInNode(index, (Node)node[subIndex], level - BITS, out newTail, ensureEditable);
       if (subNode == null && subIndex == 0)
       {
         // Leave node removal:
@@ -141,12 +143,12 @@ namespace ImmutableTrie
         node[subIndex] = subNode;
       }
 
-      return node;      
+      return node;
     }
 
     protected Node SetItemInNode(Node node, int index, int level, object value, bool ensureEditable = false)
     {
-      node = ensureEditable ? node.EnsureEditable(this.Owner) : node.Clone();
+      node = ensureEditable ? node.EnsureEditable(Owner) : node.Clone();
       if (level == 0)
       {
         node[index & MASK] = value;
@@ -161,6 +163,26 @@ namespace ImmutableTrie
       return node;
     }
 
+    protected Node CreateOverflowPath()
+    {
+      // Create new root node.
+      Node newRoot = Node.CreateNew();
+
+      // Create the new path from the tail
+      Node path = Tail;
+      for (int level = Shift; level > 0; level -= BITS)
+      {
+        Node newNode = Node.CreateNew();
+        newNode[0] = path;
+        path = newNode;
+      }
+
+      newRoot[0] = Root;
+      newRoot[1] = path;
+
+      return newRoot;
+    }
+
     protected internal sealed class Node
     {
       internal readonly static Node Empty = new Node((object)null);
@@ -169,20 +191,20 @@ namespace ImmutableTrie
 
       internal Node(object owner)
       {
-        this.Owner = owner;
-        this.Array = new object[32];
+        Owner = owner;
+        Array = new object[32];
       }
 
       internal Node(object owner, object[] arr)
       {
-        this.Owner = owner;
-        this.Array = arr;
+        Owner = owner;
+        Array = arr;
       }
 
       internal Node(Node node)
       {
-        this.Owner = node.Owner;
-        this.Array = (object[])node.Array.Clone();
+        Owner = node.Owner;
+        Array = (object[])node.Array.Clone();
       }
 
       internal static Node CreateNew(object owner = null)
@@ -192,15 +214,15 @@ namespace ImmutableTrie
 
       public object this[int i]
       {
-        get => this.Array[i];
-        set => this.Array[i] = value;
+        get => Array[i];
+        set => Array[i] = value;
       }
 
-      public int Length => this.Array.Length;
+      public int Length => Array.Length;
 
       public Node Clone()
       {
-        return new Node(this.Owner, (object[])this.Array.Clone());
+        return new Node(Owner, (object[])Array.Clone());
       }
 
       public Node EnsureEditable(object owner)
@@ -208,13 +230,13 @@ namespace ImmutableTrie
         // Make sure owner is not null. This method should only be called from a builder class
         Requires.NotNull(owner, nameof(owner));
 
-        if (this.Owner == owner)
+        if (Owner == owner)
         {
           return this;
         }
 
         // Copy the node and set the owner if the owner is different
-        return new Node(this.Owner, (object[])this.Array.Clone());
+        return new Node(Owner, (object[])Array.Clone());
       }
     }
   }

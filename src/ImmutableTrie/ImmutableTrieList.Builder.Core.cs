@@ -17,12 +17,17 @@ namespace ImmutableTrie
       /// </summary>
       private object _syncRoot;
 
+      /// <summary>
+      /// This original trie list for optimization.
+      /// This is reset to the new list once ToImmutable is called;
+      /// however, version of this builder will not be reset.
+      /// </summary>
       private ImmutableTrieList<T> _originalList;
 
       internal Builder(ImmutableTrieList<T> immutable)
-        : base(immutable.Count, immutable.Shift, immutable.Root, immutable.Tail)
+        : base(immutable.Origin, immutable.Capacity, immutable.Count, immutable.Shift, immutable.Root, immutable.Tail)
       {
-        this.Version = 0;
+        Version = 0;
         _originalList = immutable;
       }
 
@@ -33,8 +38,8 @@ namespace ImmutableTrie
       /// <returns>The value at the specified index.</returns>
       public T this[int index]
       {
-        get => this.GetItem(index);
-        set => this.SetItem(index, value);
+        get => GetItem(index);
+        set => SetItem(index, value);
       }
 
       // TODO: Check all version referene, and make sure they are used correctly
@@ -81,7 +86,7 @@ namespace ImmutableTrie
       {
         Requires.Range(index >= 0, nameof(index));
         Requires.Range(count >= 0, nameof(count));
-        Requires.Argument(index + count <= this.Count, nameof(count), "{0} + {1} must be less than or equal to {2}", nameof(index), nameof(count), nameof(this.Count));
+        Requires.Argument(index + count <= Count, nameof(count), "{0} + {1} must be less than or equal to {2}", nameof(index), nameof(count), nameof(Count));
 
         comparer = comparer ?? Comparer<T>.Default;
         return ListSortHelper<T>.Default.BinarySearch(this, index, count, item, comparer);
@@ -96,14 +101,14 @@ namespace ImmutableTrie
       /// </remarks>
       public ImmutableTrieList<T> ToImmutable()
       {
-        if (this.Owner == null)
+        if (Owner == null)
         {
           // Nothing changes, return the original list
           return _originalList;
         }
 
-        this.Owner = null;
-        return _originalList = new ImmutableTrieList<T>(Count, Shift, Root, Tail);
+        Owner = null;
+        return _originalList = new ImmutableTrieList<T>(Origin, Capacity, Count, Shift, Root, Tail);
       }
 
       /// <summary>
@@ -112,9 +117,11 @@ namespace ImmutableTrie
       public void Clear()
       {
         Count = 0;
-        Root = Node.Empty;
+        Capacity = 0;
+        Origin = 0;
+        Root = null;
+        Tail = Node.CreateNew(this.Owner);
         Shift = BITS;
-        // Tail will be trimmed in ToImmutable()
       }
 
       /// <summary>
@@ -125,51 +132,40 @@ namespace ImmutableTrie
       {
         EnsureEditable();
         Node newRoot;
-        int newShift = this.Shift;
+        int newShift = Shift;
 
-        if (this.Count - this.TailOffset < WIDTH)
+        if (Capacity - TailOffset < WIDTH)
         {
           // Add to tail if there's still room
-          this.Tail = this.Tail.EnsureEditable(this.Owner);
-          this.Tail[this.Count & MASK] = item;
-          this.Count++;
-          this.Version++;
+          Tail = Tail.EnsureEditable(Owner);
+          Tail[Capacity & MASK] = item;
+          Count++;
+          Capacity++;
+          Version++;
           return;
         }
 
         // Root overflow
         // 1 << (Shift + BITS): max tree capacity
         // + WIDTH: add the tail capacity
-        if (this.Count == (1 << (this.Shift + BITS)) + WIDTH)
+        if (Capacity == (1 << (Shift + BITS)) + WIDTH)
         {
-          // Create new root node.
-          newRoot = Node.CreateNew();
-
-          // Create the new path from the tail
-          Node path = this.Tail;
-          for (int level = this.Shift; level > 0; level -= BITS)
-          {
-            Node newNode = Node.CreateNew();
-            newNode[0] = path;
-            path = newNode;
-            newShift += BITS;
-          }
-
-          newRoot[0] = this.Root;
-          newRoot[1] = path;
+          newRoot = CreateOverflowPath();
+          newShift += BITS;
         }
         else
         {
-          newRoot = AppendInNode(this.Root, this.Shift, ensureEditable: true);
+          newRoot = AppendInNode(Root, Shift, ensureEditable: true);
         }
 
-        this.Tail = Node.CreateNew(this.Owner);
-        this.Tail[0] = item;
+        Tail = Node.CreateNew(Owner);
+        Tail[0] = item;
 
-        this.Root = newRoot;
-        this.Shift = newShift;
-        this.Count++;
-        this.Version++;
+        Root = newRoot;
+        Shift = newShift;
+        Count++;
+        Capacity++;
+        Version++;
       }
 
       /// <summary>
@@ -194,27 +190,30 @@ namespace ImmutableTrie
 
       public void Pop()
       {
-        Requires.ValidState(this.Count > 0, "The list is empty");
+        Requires.ValidState(Count > 0, "The list is empty");
         EnsureEditable();
 
         if (Count == 1)
         {
-          this.Clear();
+          Clear();
           return;
         }
 
-        if (this.Count - 1 > this.TailOffset)
+        if (Capacity - 1 > TailOffset)
         {
           // Pop in the tail
           Count--;
+          Capacity--;
           Version++;
           return;
         }
 
+        // There is only one element in the tail
+        // so the index is the last element in the leave node
         Node newTail;
-        Node newRoot = PopInNode(this.Root, this.Shift, out newTail, ensureEditable: true);
-        int newShift = this.Shift;
-        if (this.Shift > BITS && newRoot.Array[1] == null)
+        Node newRoot = PopInNode(Capacity - 2, Root, Shift, out newTail, ensureEditable: true);
+        int newShift = Shift;
+        if (Shift > BITS && newRoot.Array[1] == null)
         {
           // PopInNode may result in extra root, so need to remove addition root
           newRoot = (Node)newRoot[0];
@@ -225,6 +224,7 @@ namespace ImmutableTrie
         Shift = newShift;
         Tail = newTail;
         Count--;
+        Capacity--;
         Version++;
       }
       private void SetItem(int index, T value)
@@ -232,20 +232,21 @@ namespace ImmutableTrie
         CheckIndex(index);
         EnsureEditable();
 
+        index += Origin;
         if (index >= TailOffset)
         {
-          this.Tail = this.Tail.EnsureEditable(this.Owner);
-          this.Tail[index & MASK] = value;
+          Tail = Tail.EnsureEditable(Owner);
+          Tail[index & MASK] = value;
         }
         else
         {
-          this.Root = SetItemInNode(this.Root, index, this.Shift, value, ensureEditable: true);
+          Root = SetItemInNode(Root, index, Shift, value, ensureEditable: true);
         }
 
-        this.Version++;
+        Version++;
       }
 
-      private void EnsureEditable() => this.Owner = this.Owner ?? new object();
+      private void EnsureEditable() => Owner = Owner ?? new object();
     }
   }
 }

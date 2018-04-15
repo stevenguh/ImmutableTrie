@@ -61,6 +61,22 @@ namespace ImmutableTrie
       }
 
       /// <summary>
+      /// Creates a shallow copy of a range of elements in the source <see cref="ImmutableTrieList{T}"/>.
+      /// </summary>
+      /// <param name="index">
+      /// The zero-based <see cref="ImmutableTrieList{T}"/> index at which the range
+      /// starts.
+      /// </param>
+      /// <param name="count">
+      /// The number of elements in the range.
+      /// </param>
+      /// <returns>
+      /// A shallow copy of a range of elements in the source <see cref="ImmutableTrieList{T}"/>.
+      /// </returns>
+      /// <remarks>This operation will slightly reduce any subsequent mutation on this builder.</remarks>
+      public override ImmutableTrieList<T> GetRange(int index, int count) => this.ToImmutable().GetRange(index, count);
+
+      /// <summary>
       /// See <see cref="IList{T}"/>
       /// </summary>
       /// <exception cref="ArgumentOutOfRangeException">
@@ -119,7 +135,7 @@ namespace ImmutableTrie
           { // Only enqueue when we can get the content
             q.Enqueue(this[index]);
           }
-          
+
           addOrSet(index++, q.Dequeue());
         }
       }

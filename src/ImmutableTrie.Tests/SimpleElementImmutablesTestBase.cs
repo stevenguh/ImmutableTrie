@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ImmutableTrie.Tests
 {
-    public abstract class SimpleElementImmutablesTestBase : ImmutablesTestBase
+    public abstract class SimpleElementImmutablesTestBase
     {
         protected abstract IEnumerable<T> GetEnumerableOf<T>(params T[] contents);
 

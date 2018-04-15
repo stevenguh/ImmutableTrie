@@ -44,21 +44,7 @@ namespace ImmutableTrie
       return this.IndexOf(item) >= 0;
     }
 
-    /// <summary>
-    /// Creates a shallow copy of a range of elements in the source <see cref="ImmutableTrieList{T}"/>.
-    /// </summary>
-    /// <param name="index">
-    /// The zero-based <see cref="ImmutableTrieList{T}"/> index at which the range
-    /// starts.
-    /// </param>
-    /// <param name="count">
-    /// The number of elements in the range.
-    /// </param>
-    /// <returns>
-    /// A shallow copy of a range of elements in the source <see cref="ImmutableTrieList{T}"/>.
-    /// </returns>
-    /// <remarks>This method re-indexes values, it produces a complete copy, which has O(N) complexity.</remarks>
-    public ImmutableTrieList<T> GetRange(int index, int count) => ImmutableTrieList.CreateRange(this.Skip(index).Take(count));
+    public abstract ImmutableTrieList<T> GetRange(int index, int count);
 
     /// <summary>
     /// Searches the entire sorted <see cref="ImmutableTrieList{T}"/> for an element
