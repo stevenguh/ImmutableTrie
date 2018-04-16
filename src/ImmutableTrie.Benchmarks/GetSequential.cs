@@ -11,13 +11,13 @@ namespace ImmutableTrie.Benchmarks
 {
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
-  [MemoryDiagnoser]
   public class GetSequential
   {
-    [Params(1000)]
+    [Params(100, 1000, 10000)]
     public int N;
 
     private ImmutableList<int> immutableList;
+    private ImmutableArray<int> immutableArray;
     private ImmutableTrieList<int> trieList;
     private List<int> list;
 
@@ -29,6 +29,9 @@ namespace ImmutableTrie.Benchmarks
 
       immutableList = ImmutableList<int>.Empty;
       immutableList = immutableList.AddRange(range);
+
+      immutableArray = ImmutableArray<int>.Empty;
+      immutableArray = immutableArray.AddRange(range);
 
       trieList = ImmutableTrieList<int>.Empty;
       trieList = trieList.AddRange(range);
@@ -43,6 +46,15 @@ namespace ImmutableTrie.Benchmarks
       for (int i = 0; i < N; i++)
       {
         var stored = immutableList[i];
+      }
+    }
+
+    [Benchmark]
+    public void ImmutableArray()
+    {
+      for (int i = 0; i < N; i++)
+      {
+        var stored = immutableArray[i];
       }
     }
 

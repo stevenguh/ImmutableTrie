@@ -13,13 +13,23 @@ namespace ImmutableTrie.Benchmarks
   [MemoryDiagnoser]
   public class InsertAtZero
   {
-    [Params(1000)]
+    [Params(100, 1000)]
     public int N;
 
     [Benchmark]
     public void ImmutableList()
     {
       var list = ImmutableList<int>.Empty;
+      for(int i = 0; i < N; i++)
+      {
+        list = list.Insert(0, 0);
+      }
+    }
+
+    [Benchmark]
+    public void ImmutableArray()
+    {
+      var list = ImmutableArray<int>.Empty;
       for(int i = 0; i < N; i++)
       {
         list = list.Insert(0, 0);
@@ -36,7 +46,7 @@ namespace ImmutableTrie.Benchmarks
       }
     }
 
-        [Benchmark]
+    [Benchmark]
     public void List()
     {
       var list = new List<int>();
