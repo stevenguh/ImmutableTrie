@@ -7,11 +7,17 @@ namespace ImmutableTrie.Benchmarks
   {
     static void Main(string[] args)
     {
-        var getSequential = BenchmarkRunner.Run<ListGetSequential>();
-        var getReverse = BenchmarkRunner.Run<ListGetReverse>();
-        var add = BenchmarkRunner.Run<ListAdd>();
-        var insertAtZero = BenchmarkRunner.Run<ListInsertAtZero>();
-        var getRange = BenchmarkRunner.Run<ListGetRange>();
+      var listGetSequential = BenchmarkRunner.Run<ListGetSequential>();
+      var listGetReverse = BenchmarkRunner.Run<ListGetReverse>();
+      var listAdd = BenchmarkRunner.Run<ListAdd>();
+      var listInsertAtZero = BenchmarkRunner.Run<ListInsertAtZero>();
+      var listGetRange = BenchmarkRunner.Run<ListGetRange>();
+
+      var popCount = BenchmarkRunner.Run<PopCount>();
+
+      var dictionarySetUnique = BenchmarkRunner.Run<DictionarySetUnique>();
+      var DictionarySetExisting = BenchmarkRunner.Run<DictionarySetExisting>();
+      var dictionaryRemove = BenchmarkRunner.Run<DictionaryRemove>();
 
     }
   }
