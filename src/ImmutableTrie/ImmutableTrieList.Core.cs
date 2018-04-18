@@ -90,8 +90,9 @@ namespace ImmutableTrie
       index += Origin;
       int endIndex = index + count - 1;
       int origin = index & MASK;
+      int tailOffset = TailOffset;
       // Both start and end is in the tail
-      if (index >= TailOffset && endIndex >= TailOffset)
+      if (index >= tailOffset && endIndex >= tailOffset)
       {
         return new ImmutableTrieList<T>(origin, count + origin, count, BITS, null, this.Tail);
       }
@@ -101,7 +102,7 @@ namespace ImmutableTrie
       int newShift = Shift;
 
       // Find new root node
-      int endIndexInTrie = endIndex >= TailOffset ? TailOffset - 1 : endIndex;
+      int endIndexInTrie = endIndex >= tailOffset ? tailOffset - 1 : endIndex;
       int subStart = (index >> newShift) & MASK;
       int subEnd = (endIndexInTrie >> newShift) & MASK;
       if (subStart == subEnd)
@@ -123,8 +124,8 @@ namespace ImmutableTrie
         }
       }
 
-        // Move the node to the tail if the end if not currently in tail
-        if (endIndex < TailOffset)
+        // Move the node to the tail if the end is not currently in tail
+        if (endIndex < tailOffset)
         {
           newRoot = PopInNode(endIndex, newRoot, newShift, out newTail);
           if (newShift > BITS && newRoot.Array[1] == null)
