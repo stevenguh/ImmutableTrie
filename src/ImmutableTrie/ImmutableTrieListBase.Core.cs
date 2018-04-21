@@ -12,11 +12,11 @@ namespace ImmutableTrie
   /// </summary>
   public abstract partial class ImmutableTrieListBase<T>
   {
-    protected const int BITS = 5; // We need 5 bit for 32-way branching tries
-    protected const int WIDTH = 1 << BITS; // 2^5 = 32
-    protected const int MASK = WIDTH - 1; // 31, or 0x1f
+    internal const int BITS = 5; // We need 5 bit for 32-way branching tries
+    internal const int WIDTH = 1 << BITS; // 2^5 = 32
+    internal const int MASK = WIDTH - 1; // 31, or 0x1f
 
-    protected ImmutableTrieListBase(int count, int shift, Node root, Node tail)
+    internal ImmutableTrieListBase(int count, int shift, Node root, Node tail)
     {
       Count = count;
       Shift = shift;
@@ -25,7 +25,7 @@ namespace ImmutableTrie
       Owner = null;
     }
 
-    protected ImmutableTrieListBase(int origin, int capacity, int count, int shift, Node root, Node tail)
+    internal ImmutableTrieListBase(int origin, int capacity, int count, int shift, Node root, Node tail)
     {
       Origin = origin;
       Capacity = capacity;
@@ -46,17 +46,16 @@ namespace ImmutableTrie
     /// Gets the number of elements contained in the list.
     /// </summary>
     /// <value>The number of elements in the list.</value>
-    public int Count { get; protected set; } // Setter is for the builder only
+    public int Count { get; internal set; } // Setter is for the builder only
 
     // count + origin
-    protected int Capacity { get; set; }
-    protected int Origin { get; set; }
-    protected int Shift { get; set; } // Setter is for the builder only
-    protected Node Root { get; set; } // Setter is for the builder only
-    protected Node Tail { get; set; } // Setter is for the builder only
-    protected object Owner { get; set; } // Builder use only
-    protected int TailOffset =>
-      Capacity < WIDTH ? 0 : ((Capacity - 1) >> BITS) << BITS;
+    internal int Capacity { get; set; }
+    internal int Origin { get; set; }
+    internal int Shift { get; set; } // Setter is for the builder only
+    internal Node Root { get; set; } // Setter is for the builder only
+    internal Node Tail { get; set; } // Setter is for the builder only
+    internal object Owner { get; set; } // Builder use only
+    internal int TailOffset => Capacity < WIDTH ? 0 : ((Capacity - 1) >> BITS) << BITS;
 
     /// <summary>
     /// Tests whether a value is one that might be found in this collection.
@@ -66,7 +65,7 @@ namespace ImmutableTrie
     /// <devremarks>
     /// This implementation comes from <see cref="List{T}"/>.
     /// </devremarks>
-    protected static bool IsCompatibleObject(object value)
+    internal static bool IsCompatibleObject(object value)
     {
       // Non-null values are fine.  Only accept nulls if T is a class or Nullable<U>.
       // Note that default(T) is not equal to null for value types except when T is Nullable<U>. 
@@ -81,10 +80,10 @@ namespace ImmutableTrie
       return (T)node[index & MASK];
     }
 
-    protected void CheckIndex(int index) =>
+    internal void CheckIndex(int index) =>
       Requires.Range(index >= 0 && index < Count, nameof(index));
 
-    protected Node GetNodeFor(int index)
+    internal Node GetNodeFor(int index)
     {
       if (index >= TailOffset)
       {
@@ -100,7 +99,7 @@ namespace ImmutableTrie
       return node;
     }
 
-    protected Node AppendInNode(Node node, int level, bool ensureEditable = false)
+    internal Node AppendInNode(Node node, int level, bool ensureEditable = false)
     {
       node = node ?? Node.Empty; // node can be null if there is no root use empty.
 
@@ -117,7 +116,7 @@ namespace ImmutableTrie
       }
     }
 
-    protected Node PopInNode(int index, Node node, int level, out Node newTail, bool ensureEditable = false)
+    internal Node PopInNode(int index, Node node, int level, out Node newTail, bool ensureEditable = false)
     {
         node = node ?? Node.Empty; // node can be null if there is no root use empty.
 
@@ -146,7 +145,7 @@ namespace ImmutableTrie
       return node;
     }
 
-    protected Node SetItemInNode(Node node, int index, int level, object value, bool ensureEditable = false)
+    internal Node SetItemInNode(Node node, int index, int level, object value, bool ensureEditable = false)
     {
       node = ensureEditable ? node.EnsureEditable(Owner) : node.Clone();
       if (level == 0)
@@ -163,7 +162,7 @@ namespace ImmutableTrie
       return node;
     }
 
-    protected Node CreateOverflowPath()
+    internal Node CreateOverflowPath()
     {
       // Create new root node.
       Node newRoot = Node.CreateNew();
@@ -183,7 +182,7 @@ namespace ImmutableTrie
       return newRoot;
     }
 
-    protected internal sealed class Node
+    internal sealed class Node
     {
       internal readonly static Node Empty = new Node((object)null);
       internal object Owner;
