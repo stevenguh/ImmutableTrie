@@ -122,6 +122,7 @@ namespace ImmutableTrie
         Root = null;
         Tail = Node.CreateNew(this.Owner);
         Shift = BITS;
+        Version++;
       }
 
       /// <summary>

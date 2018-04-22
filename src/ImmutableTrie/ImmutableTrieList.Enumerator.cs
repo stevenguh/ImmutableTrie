@@ -58,7 +58,7 @@ namespace ImmutableTrie
         Requires.Argument(!reversed || count == -1 || (startIndex == -1 ? list.Count - 1 : startIndex) - count + 1 >= 0, nameof(count), "The specified {0} and {1} do not produce a enumerable range.", nameof(startIndex), nameof(count));
 
         _list = list;
-        _enumeratingBuilderVersion = -1;
+        _enumeratingBuilderVersion = GetCurrentVersion(list);
 
         count = count == -1 ? list.Count : count;
         _startIndex = startIndex >= 0 ? startIndex : (reversed ? list.Count - 1 : 0);
@@ -68,9 +68,6 @@ namespace ImmutableTrie
 
         _reversed = reversed;
         _disposed = false;
-
-        // Update the version if list is a Builder
-        _enumeratingBuilderVersion = this.GetCurrentVersion();
       }
 
       /// <summary>
@@ -121,9 +118,12 @@ namespace ImmutableTrie
       public void Reset()
       {
         ThrowIfDisposed();
-        _enumeratingBuilderVersion = this.GetCurrentVersion();
+        _enumeratingBuilderVersion = GetCurrentVersion(_list);
         _runningIndex = _reversed ? _startIndex + 1 : _startIndex - 1;
       }
+
+      private static int GetCurrentVersion(ImmutableTrieListBase<T> list) =>
+        (list is Builder builder) ? builder.Version : -1;
 
       private void ThrowIfDisposed()
       {
@@ -135,13 +135,11 @@ namespace ImmutableTrie
 
       private void ThrowIfChange()
       {
-        if (_enumeratingBuilderVersion != this.GetCurrentVersion())
+        if (_enumeratingBuilderVersion != GetCurrentVersion(_list))
         {
           throw new InvalidOperationException("Collection was modified; enumeration operation may not execute.");
         }
       }
-
-      private int GetCurrentVersion() => (_list is Builder builder) ? builder.Version : -1;
     }
   }
 }
