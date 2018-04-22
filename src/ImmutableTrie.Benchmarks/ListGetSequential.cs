@@ -11,12 +11,13 @@ namespace ImmutableTrie.Benchmarks
 {
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
-  public class GetRange
+  public class ListGetSequential
   {
     [Params(100, 1000, 10000)]
     public int N;
 
     private ImmutableList<int> immutableList;
+    private ImmutableArray<int> immutableArray;
     private ImmutableTrieList<int> trieList;
     private List<int> list;
 
@@ -29,6 +30,9 @@ namespace ImmutableTrie.Benchmarks
       immutableList = ImmutableList<int>.Empty;
       immutableList = immutableList.AddRange(range);
 
+      immutableArray = ImmutableArray<int>.Empty;
+      immutableArray = immutableArray.AddRange(range);
+
       trieList = ImmutableTrieList<int>.Empty;
       trieList = trieList.AddRange(range);
 
@@ -39,33 +43,36 @@ namespace ImmutableTrie.Benchmarks
     [Benchmark]
     public void ImmutableList()
     {
-      int count = immutableList.Count;
-      for(int i = 0; i < immutableList.Count / 2; i++)
+      for (int i = 0; i < N; i++)
       {
-        var range = immutableList.GetRange(i, count);
-        count -= 2;
+        var stored = immutableList[i];
+      }
+    }
+
+    [Benchmark]
+    public void ImmutableArray()
+    {
+      for (int i = 0; i < N; i++)
+      {
+        var stored = immutableArray[i];
       }
     }
 
     [Benchmark]
     public void ImmutableTrieList()
     {
-      int count = trieList.Count;
-      for(int i = 0; i < trieList.Count / 2; i++)
+      for (int i = 0; i < N; i++)
       {
-        var range = trieList.GetRange(i, count);
-        count -= 2;
+        var stored = trieList[i];
       }
     }
 
     [Benchmark]
     public void List()
     {
-      int count = list.Count;
-      for(int i = 0; i < list.Count / 2; i++)
+      for (int i = 0; i < N; i++)
       {
-        var range = list.GetRange(i, count);
-        count -= 2;
+        var stored = list[i];
       }
     }
   }

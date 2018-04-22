@@ -11,9 +11,9 @@ namespace ImmutableTrie.Benchmarks
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
   [MemoryDiagnoser]
-  public class Add
+  public class ListInsertAtZero
   {
-    [Params(100, 1000, 10000)]
+    [Params(100, 1000)]
     public int N;
 
     [Benchmark]
@@ -22,7 +22,7 @@ namespace ImmutableTrie.Benchmarks
       var list = ImmutableList<int>.Empty;
       for(int i = 0; i < N; i++)
       {
-        list = list.Add(0);
+        list = list.Insert(0, 0);
       }
     }
 
@@ -32,7 +32,7 @@ namespace ImmutableTrie.Benchmarks
       var list = ImmutableArray<int>.Empty;
       for(int i = 0; i < N; i++)
       {
-        list = list.Add(0);
+        list = list.Insert(0, 0);
       }
     }
 
@@ -42,17 +42,17 @@ namespace ImmutableTrie.Benchmarks
       var list = ImmutableTrieList<int>.Empty;
       for(int i = 0; i < N; i++)
       {
-        list = list.Add(0);
+        list = list.Insert(0, 0);
       }
     }
 
-        [Benchmark]
+    [Benchmark]
     public void List()
     {
       var list = new List<int>();
       for(int i = 0; i < N; i++)
       {
-        list.Add(0);
+        list.Insert(0, 0);
       }
     }
   }

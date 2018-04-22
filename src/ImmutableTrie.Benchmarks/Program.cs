@@ -7,11 +7,11 @@ namespace ImmutableTrie.Benchmarks
   {
     static void Main(string[] args)
     {
-        var getSequential = BenchmarkRunner.Run<GetSequential>();
-        var getReverse = BenchmarkRunner.Run<GetReverse>();
-        var add = BenchmarkRunner.Run<Add>();
-        var insertAtZero = BenchmarkRunner.Run<InsertAtZero>();
-        var getRange = BenchmarkRunner.Run<GetRange>();
+        var getSequential = BenchmarkRunner.Run<ListGetSequential>();
+        var getReverse = BenchmarkRunner.Run<ListGetReverse>();
+        var add = BenchmarkRunner.Run<ListAdd>();
+        var insertAtZero = BenchmarkRunner.Run<ListInsertAtZero>();
+        var getRange = BenchmarkRunner.Run<ListGetRange>();
 
     }
   }

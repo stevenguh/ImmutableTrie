@@ -11,7 +11,7 @@ namespace ImmutableTrie.Benchmarks
 {
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
-  public class GetReverse
+  public class ListGetReverse
   {
     [Params(100, 1000, 10000)]
     public int N;
