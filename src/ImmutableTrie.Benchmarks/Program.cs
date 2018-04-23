@@ -15,7 +15,7 @@ namespace ImmutableTrie.Benchmarks
 
       var popCount = BenchmarkRunner.Run<PopCount>();
 
-      var dictionarySetUnique = BenchmarkRunner.Run<DictionarySetUnique>();
+      var dictionarySetUnique = BenchmarkRunner.Run<DictionaryAdd>();
       var DictionarySetExisting = BenchmarkRunner.Run<DictionarySetExisting>();
       var dictionaryRemove = BenchmarkRunner.Run<DictionaryRemove>();
 

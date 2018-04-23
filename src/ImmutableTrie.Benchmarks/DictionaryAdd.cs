@@ -12,7 +12,7 @@ namespace ImmutableTrie.Benchmarks
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
   [MemoryDiagnoser]
-  public class DictionarySetUnique
+  public class DictionaryAdd
   {
     [Params(1000, 10000)]
     public int N;
@@ -28,22 +28,22 @@ namespace ImmutableTrie.Benchmarks
     }
 
     [Benchmark]
-    public void ImmutableDictSet()
+    public void ImmutableDictAdd()
     {
       var temp = immutableDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.SetItem($"{i},{i}", i);
+        temp = temp.Add($"{i},{i}", i);
       }
     }
 
     [Benchmark]
-    public void ImmutableTrieDictSet()
+    public void ImmutableTrieDictAdd()
     {
       var temp = immutableTrieDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.SetItem($"{i},{i}", i);
+        temp = temp.Add($"{i},{i}", i);
       }
     }
   }
