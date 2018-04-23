@@ -342,7 +342,7 @@ namespace ImmutableTrie
 
         set
         {
-          UpdateItem(key, value, KeyCollisionBehavior.SetValue);
+          UpdateItem(key, value, KeyCollisionBehavior.SetIfValueDifferent);
         }
       }
 
@@ -489,11 +489,18 @@ namespace ImmutableTrie
       /// <exception cref="NotSupportedException">The <see cref="IDictionary{TKey, TValue}"/> is read-only.</exception>
       public bool Remove(TKey key)
       {
-        this.EnsureEditable();
         if (_root == null) { return false; }
-        // NodeBase n = _root.Remove(_owner, 0, _comparers.KeyComparer.GetHashCode(key), key, _comparers, out bool didRemove);
-        // if (n != _root) {_root = n; }
-        _root = _root.Remove(_owner, 0, _comparers.KeyComparer.GetHashCode(key), key, _comparers, out OperationResult result);
+
+        object oldOwner = _owner;        
+        this.EnsureEditable();
+        var newRoot = _root.Remove(_owner, 0, _comparers.KeyComparer.GetHashCode(key), key, _comparers, out OperationResult result);
+        if (newRoot == _root && result == OperationResult.NoChangeRequired)
+        {
+          _owner = oldOwner;
+          return false;
+        }
+
+        _root = newRoot;
         if (result == OperationResult.SizeChanged)
         {
           _count--;
@@ -608,23 +615,34 @@ namespace ImmutableTrie
 
       private void UpdateItem(TKey key, TValue value, KeyCollisionBehavior behavior)
       {
+        object oldOwner = _owner;        
         this.EnsureEditable();
-        _root = (_root ?? BitmapIndexedNode.Empty)
+        var newRoot = (_root ?? BitmapIndexedNode.Empty)
           .Update(_owner, 0, _comparers.KeyComparer.GetHashCode(key), key, value, _comparers, behavior, out OperationResult result);
 
         switch(result)
         {
           case OperationResult.AppliedWithoutSizeChange:
             _version++;
+            _root = newRoot;
             break;
           
           case OperationResult.SizeChanged:
             _count++;
             _version++;
+            _root = newRoot;
             break;
           
           case OperationResult.NoChangeRequired:
-           break;
+            if (newRoot == _root)
+            {
+              // Since there is no change in this operation, the owner in the trie never did updated
+              // we want to set the old owner because, if the oldOwner is null, and no operation is done
+              // in this builder, we want to able to retrun the old immutable instance 
+              _owner = oldOwner;
+            }
+
+            break;
         }
       }
 

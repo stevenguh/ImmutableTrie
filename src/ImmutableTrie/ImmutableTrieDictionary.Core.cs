@@ -44,6 +44,11 @@ namespace ImmutableTrie
       SetValue,
 
       /// <summary>
+      /// Sets the value for the given key, if only the value is different than existing value.
+      /// </summary>
+      SetIfValueDifferent,
+
+      /// <summary>
       /// Skips the mutating operation if a key conflict is detected.
       /// </summary>
       Skip,
@@ -226,7 +231,7 @@ namespace ImmutableTrie
       Contract.Ensures(Contract.Result<ImmutableTrieDictionary<TKey, TValue>>() != null);
       Contract.Ensures(!Contract.Result<ImmutableTrieDictionary<TKey, TValue>>().IsEmpty);
 
-      return UpdateItem(key, value, KeyCollisionBehavior.SetValue);
+      return UpdateItem(key, value, KeyCollisionBehavior.SetIfValueDifferent);
     }
 
     /// <summary>
@@ -239,9 +244,9 @@ namespace ImmutableTrie
       Contract.Ensures(Contract.Result<ImmutableTrieDictionary<TKey, TValue>>() != null);
 
       if (_root == null) { return this; } // Empty
-      NodeBase newRoot = _root.Remove(null, 0, key.GetHashCode(), key, _comparers, out OperationResult result);
+      NodeBase newRoot = _root.Remove(null, 0, _comparers.KeyComparer.GetHashCode(key), key, _comparers, out OperationResult result);
       if (newRoot == _root) { return this; } // No update was made, key not found.
-      return new ImmutableTrieDictionary<TKey, TValue>(_count - 1, newRoot);
+      return new ImmutableTrieDictionary<TKey, TValue>(_count - 1, newRoot, _comparers);
     }
 
     /// <summary>
@@ -264,7 +269,7 @@ namespace ImmutableTrie
       NodeBase newRoot = (_root ?? BitmapIndexedNode.Empty)
         .Update(null, 0, _comparers.KeyComparer.GetHashCode(key), key, value, _comparers, behavior, out OperationResult result);
       if (newRoot == _root) { return this; }
-      return new ImmutableTrieDictionary<TKey, TValue>(result == OperationResult.SizeChanged ? _count + 1 : _count, newRoot);
+      return new ImmutableTrieDictionary<TKey, TValue>(result == OperationResult.SizeChanged ? _count + 1 : _count, newRoot, _comparers);
     }
   }
 }

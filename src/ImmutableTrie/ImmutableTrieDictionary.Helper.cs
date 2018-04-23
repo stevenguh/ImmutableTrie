@@ -32,14 +32,14 @@ namespace ImmutableTrie
         Requires.NotNullAllowStructs(equalKey, nameof(equalKey));
         if (root == null)
         {
-          actualKey = default(TKey);
+          actualKey = equalKey;
           return false;
         }
 
         object result = root.Get(0, comparers.KeyComparer.GetHashCode(equalKey), comparers, equalKey, out actualKey);
         if (result == NotFound)
         {
-          actualKey = default(TKey);
+          actualKey = equalKey;
           return false;
         }
 

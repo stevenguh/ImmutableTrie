@@ -12,7 +12,7 @@ namespace ImmutableTrie
     /// <summary>
     /// Enumerates the contents of the collection in an allocation-free manner.
     /// </summary>
-    public struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IDisposable
+    public class Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IDisposable
     {
       /// <summary>
       /// The builder being enumerated, if applicable.
@@ -40,7 +40,7 @@ namespace ImmutableTrie
       internal Enumerator(NodeBase root, Builder builder = null)
       {
         _builder = builder;
-        _nodeEnumerator = root.GetEnumerator();
+        _nodeEnumerator = root?.GetEnumerator() ?? GetEmptyEnumerator();
         _enumeratingBuilderVersion = GetCurrentVersion(builder);
         _disposed = false;
       }
@@ -53,6 +53,8 @@ namespace ImmutableTrie
         get
         {
           this.ThrowIfDisposed();
+          this.ThrowIfChanged();
+
           return _nodeEnumerator.Current;
         }
       }
@@ -71,7 +73,7 @@ namespace ImmutableTrie
       /// <exception cref="InvalidOperationException">The collection was modified after the enumerator was created. </exception>
       public bool MoveNext()
       {
-        this.ThrowIfChanged();
+        this.ThrowIfDisposed();
         this.ThrowIfChanged();
 
         return _nodeEnumerator.MoveNext();
@@ -84,6 +86,7 @@ namespace ImmutableTrie
       public void Reset()
       {
         this.ThrowIfDisposed();
+
         _enumeratingBuilderVersion = _builder != null ? _builder.Version : -1;
         _nodeEnumerator.Reset();
       }
@@ -99,6 +102,11 @@ namespace ImmutableTrie
 
       private static int GetCurrentVersion(Builder builder) =>
         builder != null ? builder.Version : -1;
+
+      private static IEnumerator<KeyValuePair<TKey, TValue>> GetEmptyEnumerator()
+      {
+        yield break;
+      }
 
       private void ThrowIfDisposed()
       {

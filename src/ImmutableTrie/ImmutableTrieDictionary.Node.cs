@@ -82,6 +82,7 @@ namespace ImmutableTrie
           Requires.NotNull(array, nameof(array));
           _array = array;
           _runningIndex = -1;
+          _enumerator = null;
         }
 
         public KeyValuePair<TKey, TValue> Current
@@ -109,7 +110,10 @@ namespace ImmutableTrie
           ThrowIfDisposed();
           if (_enumerator != null)
           {
-            _enumerator.MoveNext();
+            if (_enumerator.MoveNext())
+            {
+              return true;
+            }
           }
 
           while (++_runningIndex < _array.Length)
@@ -124,6 +128,7 @@ namespace ImmutableTrie
             }
           }
 
+          _enumerator = null;
           return false;
         }
 
@@ -131,6 +136,7 @@ namespace ImmutableTrie
         {
           ThrowIfDisposed();
           _runningIndex = -1;
+          _enumerator = null;
         }
 
         private void ThrowIfDisposed()
@@ -575,7 +581,19 @@ namespace ImmutableTrie
           {
             case KeyCollisionBehavior.SetValue:
               result = OperationResult.AppliedWithoutSizeChange;
-              return SetValue(owner, value);
+              return SetValue(owner, key, value);
+            
+            case KeyCollisionBehavior.SetIfValueDifferent:
+              if (comparers.ValueComparer.Equals(this.Value, value))
+              {
+                result = OperationResult.NoChangeRequired;
+                return this;
+              }
+              else
+              {
+                result = OperationResult.AppliedWithoutSizeChange;
+                return SetValue(owner, key, value);
+              }
 
             case KeyCollisionBehavior.Skip:
               result = OperationResult.NoChangeRequired;
@@ -598,24 +616,76 @@ namespace ImmutableTrie
           }
         }
 
-        result = OperationResult.AppliedWithoutSizeChange;
+        result = OperationResult.SizeChanged;
         return MergeIntoNode(owner, shift, this, comparers.KeyComparer.GetHashCode(this.Key), hash, key, value);
       }
 
-      internal override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-      {
-        yield return new KeyValuePair<TKey, TValue>(this.Key, this.Value);
-      }
+      internal override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new ValueNodeEnumerator(this);
 
-      private ValueNode SetValue(object owner, TValue value)
+      private ValueNode SetValue(object owner, TKey key, TValue value)
       {
         if (IsEditable(owner))
         {
+          this.Key = key;
           this.Value = value;
           return this;
         }
 
-        return new ValueNode(owner, this.Key, value);
+        return new ValueNode(owner, key, value);
+      }
+
+      private sealed class ValueNodeEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
+      {
+        private bool _disposed;
+        private int _runningIndex;
+        private ValueNode _node;
+
+        internal ValueNodeEnumerator(ValueNode node)
+        {
+          Requires.NotNull(node, nameof(node));
+          _runningIndex = -1;
+          _node = node;
+        }
+
+        public KeyValuePair<TKey, TValue> Current
+        {
+          get
+          {
+            if (_runningIndex == 0)
+            {
+              return new KeyValuePair<TKey, TValue>(_node.Key, _node.Value);
+            }
+
+            throw new InvalidOperationException();
+          }
+        }
+
+        object IEnumerator.Current => this.Current;
+
+        /// <summary>
+        /// Disposes of this enumerator.
+        /// </summary>
+        public void Dispose() => _disposed = true;
+
+        public bool MoveNext()
+        {
+          ThrowIfDisposed();
+          return ++_runningIndex == 0;
+        }
+
+        public void Reset()
+        {
+          ThrowIfDisposed();
+          _runningIndex = -1;
+        }
+
+        private void ThrowIfDisposed()
+        {
+          if (_disposed)
+          {
+            throw new ObjectDisposedException(this.GetType().FullName);
+          }
+        }
       }
     }
   }

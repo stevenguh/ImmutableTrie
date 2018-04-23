@@ -443,7 +443,6 @@ namespace ImmutableTrie
         // The trie mostly based on the hash, the key was used in the core structure
         var comparers = Comparers.Get(keyComparer, valueComparer);
         var set = EmptyWithComparers(comparers).AddRange(this);
-        // set = set.AddRange(this, avoidToHashMap: true);
         return set;
       }
     }
