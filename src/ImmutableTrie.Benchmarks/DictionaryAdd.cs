@@ -52,6 +52,7 @@ namespace ImmutableTrie.Benchmarks
     [Benchmark]
     public void DictAdd()
     {
+      dictionary.Clear();
       for (int i = 0; i < N; i++)
       {
         dictionary.Add($"{i},{i}", i);
