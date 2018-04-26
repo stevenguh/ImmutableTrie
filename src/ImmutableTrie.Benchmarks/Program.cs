@@ -21,7 +21,6 @@ namespace ImmutableTrie.Benchmarks
 
       var dictionaryBuilderAdd = BenchmarkRunner.Run<DictionaryBuilderAdd>();
       var DictionaryBuilderSetExisting = BenchmarkRunner.Run<DictionaryBuilderSetExisting>();
-      var dictionaryBuilderRemove = BenchmarkRunner.Run<DictionaryBuilderRemove>();
     }
   }
 }
