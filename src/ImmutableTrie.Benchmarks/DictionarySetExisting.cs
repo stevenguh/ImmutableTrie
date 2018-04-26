@@ -20,17 +20,22 @@ namespace ImmutableTrie.Benchmarks
 
     public ImmutableDictionary<string, int> immutableDictionary;
     public ImmutableTrieDictionary<string, int> immutableTrieDictionary;
+    public Dictionary<string, int> dictionary;
+    public Random rnd = new Random();
+
 
     [GlobalSetup]
     public void Setup()
     {
       immutableDictionary = ImmutableDictionary.Create<string, int>();
       immutableTrieDictionary = ImmutableTrieDictionary.Create<string, int>();
+      dictionary = new Dictionary<string, int>();
       for (int i = 0; i < N; i++)
       {
-        immutableDictionary = immutableDictionary.SetItem($"{i},{i}", i);
-        immutableTrieDictionary = immutableTrieDictionary.SetItem($"{i},{i}", i);
-
+        var key = $"{i},{i}";
+        immutableDictionary = immutableDictionary.SetItem(key, i);
+        immutableTrieDictionary = immutableTrieDictionary.SetItem(key, i);
+        dictionary[key] = i;
       }
     }
 
@@ -40,17 +45,26 @@ namespace ImmutableTrie.Benchmarks
       var temp = immutableDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.SetItem($"{i},{i}", -i);
+        temp = temp.SetItem($"{i},{i}", rnd.Next());
       }
     }
 
     [Benchmark]
     public void ImmutableTrieDictSet()
     {
-      var temp = immutableDictionary;
+      var temp = immutableTrieDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.SetItem($"{i},{i}", -i);
+        temp = temp.SetItem($"{i},{i}", rnd.Next());
+      }
+    }
+
+    [Benchmark]
+    public void DictSet()
+    {
+      for (int i = 0; i < N; i++)
+      {
+        dictionary[$"{i},{i}"] = rnd.Next();
       }
     }
   }

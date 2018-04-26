@@ -9,60 +9,59 @@ using BenchmarkDotNet.Attributes.Jobs;
 
 namespace ImmutableTrie.Benchmarks
 {
+
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
   [MemoryDiagnoser]
-  public class DictionaryRemove
+  public class DictionaryBuilderSetExisting
   {
-    [Params(1000, 10000)]
+    [Params(1000, 10000, 100000)]
     public int N;
 
-    public ImmutableDictionary<string, int> immutableDictionary;
-    public ImmutableTrieDictionary<string, int> immutableTrieDictionary;
+    public ImmutableDictionary<string, int>.Builder immutableDictionary;
+    public ImmutableTrieDictionary<string, int>.Builder immutableTrieDictionary;
     public Dictionary<string, int> dictionary;
-
+    public Random rnd = new Random();
 
     [GlobalSetup]
     public void Setup()
     {
-      immutableDictionary = ImmutableDictionary.Create<string, int>();
-      immutableTrieDictionary = ImmutableTrieDictionary.Create<string, int>();
+      immutableDictionary = ImmutableDictionary.CreateBuilder<string, int>();
+      immutableTrieDictionary = ImmutableTrieDictionary.CreateBuilder<string, int>();
       dictionary = new Dictionary<string, int>();
       for (int i = 0; i < N; i++)
       {
         var key = $"{i},{i}";
-        immutableDictionary = immutableDictionary.SetItem(key, i);
-        immutableTrieDictionary = immutableTrieDictionary.SetItem(key, i);
+        immutableDictionary[key] = i;
+        immutableTrieDictionary[key] = i;
         dictionary[key] = i;
       }
     }
 
     [Benchmark]
-    public void ImmutableDictRemove()
+    public void ImmutableDictSet()
     {
-      var temp = immutableDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.Remove($"{i},{i}");
+        immutableDictionary[$"{i},{i}"] = rnd.Next();
       }
     }
 
     [Benchmark]
-    public void ImmutableTrieDictRemove()
+    public void ImmutableTrieDictSet()
     {
-      var temp = immutableTrieDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.Remove($"{i},{i}");
+        immutableTrieDictionary[$"{i},{i}"] = rnd.Next();
       }
     }
 
     [Benchmark]
-    public void DictRemove()
+    public void DictSet()
     {
       for (int i = 0; i < N; i++)
       {
-        dictionary.Remove($"{i},{i}");
+        dictionary[$"{i},{i}"] = rnd.Next();
       }
     }
   }

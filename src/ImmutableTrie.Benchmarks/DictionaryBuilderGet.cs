@@ -12,57 +12,55 @@ namespace ImmutableTrie.Benchmarks
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
   [MemoryDiagnoser]
-  public class DictionaryRemove
+  public class DictionaryBuilderGet
   {
     [Params(1000, 10000)]
     public int N;
 
-    public ImmutableDictionary<string, int> immutableDictionary;
-    public ImmutableTrieDictionary<string, int> immutableTrieDictionary;
+    public ImmutableDictionary<string, int>.Builder immutableDictionary;
+    public ImmutableTrieDictionary<string, int>.Builder immutableTrieDictionary;
     public Dictionary<string, int> dictionary;
 
 
     [GlobalSetup]
     public void Setup()
     {
-      immutableDictionary = ImmutableDictionary.Create<string, int>();
-      immutableTrieDictionary = ImmutableTrieDictionary.Create<string, int>();
-      dictionary = new Dictionary<string, int>();
-      for (int i = 0; i < N; i++)
-      {
-        var key = $"{i},{i}";
-        immutableDictionary = immutableDictionary.SetItem(key, i);
-        immutableTrieDictionary = immutableTrieDictionary.SetItem(key, i);
-        dictionary[key] = i;
-      }
+      var content = Enumerable.Range(0, N).Select(i => new KeyValuePair<string, int>(i.ToString(), i));
+
+      dictionary = new Dictionary<string, int>(content);
+      immutableDictionary = ImmutableDictionary.CreateBuilder<string,int>();
+      immutableTrieDictionary = ImmutableTrieDictionary.CreateBuilder<string,int>();
+
+      immutableDictionary.AddRange(content);
+      immutableTrieDictionary.AddRange(content);
     }
 
     [Benchmark]
-    public void ImmutableDictRemove()
+    public void ImmutableDictGet()
     {
       var temp = immutableDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.Remove($"{i},{i}");
+        var value = immutableDictionary[i.ToString()];
       }
     }
 
     [Benchmark]
-    public void ImmutableTrieDictRemove()
+    public void ImmutableTrieDictGet()
     {
       var temp = immutableTrieDictionary;
       for (int i = 0; i < N; i++)
       {
-        temp = temp.Remove($"{i},{i}");
+        var value = immutableDictionary[i.ToString()];
       }
     }
 
     [Benchmark]
-    public void DictRemove()
+    public void DictGet()
     {
       for (int i = 0; i < N; i++)
       {
-        dictionary.Remove($"{i},{i}");
+        var value = dictionary[i.ToString()];
       }
     }
   }

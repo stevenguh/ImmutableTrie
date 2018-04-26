@@ -12,46 +12,47 @@ namespace ImmutableTrie.Benchmarks
   [ClrJob(isBaseline: true), CoreJob, MonoJob]
   [RPlotExporter, RankColumn]
   [MemoryDiagnoser]
-  public class DictionaryAdd
+  public class DictionaryBuilderAdd
   {
     [Params(1000, 10000)]
     public int N;
 
-    public ImmutableDictionary<string, int> immutableDictionary;
-    public ImmutableTrieDictionary<string, int> immutableTrieDictionary;
+    public ImmutableDictionary<string, int>.Builder immutableDictionary;
+    public ImmutableTrieDictionary<string, int>.Builder immutableTrieDictionary;
     public Dictionary<string, int> dictionary;
 
     [GlobalSetup]
     public void Setup()
     {
-      immutableDictionary = ImmutableDictionary.Create<string, int>();
-      immutableTrieDictionary = ImmutableTrieDictionary.Create<string, int>();
+      immutableDictionary = ImmutableDictionary.CreateBuilder<string, int>();
+      immutableTrieDictionary = ImmutableTrieDictionary.CreateBuilder<string, int>();
       dictionary = new Dictionary<string, int>();
     }
 
     [Benchmark]
     public void ImmutableDictAdd()
     {
-      var temp = immutableDictionary;
+      immutableDictionary.Clear();
       for (int i = 0; i < N; i++)
       {
-        temp = temp.Add($"{i},{i}", i);
+        immutableDictionary.Add($"{i},{i}", i);
       }
     }
 
     [Benchmark]
     public void ImmutableTrieDictAdd()
     {
-      var temp = immutableTrieDictionary;
+      immutableTrieDictionary.Clear();
       for (int i = 0; i < N; i++)
       {
-        temp = temp.Add($"{i},{i}", i);
+        immutableTrieDictionary.Add($"{i},{i}", i);
       }
     }
 
     [Benchmark]
-    public void DictAdd()
+    public void DictionaryAdd()
     {
+      dictionary.Clear();
       for (int i = 0; i < N; i++)
       {
         dictionary.Add($"{i},{i}", i);

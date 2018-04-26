@@ -19,6 +19,8 @@ namespace ImmutableTrie.Benchmarks
 
     public ImmutableDictionary<string, int> immutableDictionary;
     public ImmutableTrieDictionary<string, int> immutableTrieDictionary;
+    public Dictionary<string, int> dictionary;
+
 
     [GlobalSetup]
     public void Setup()
@@ -27,6 +29,8 @@ namespace ImmutableTrie.Benchmarks
 
       immutableDictionary = ImmutableDictionary.CreateRange<string, int>(content);
       immutableTrieDictionary = ImmutableTrieDictionary.CreateRange<string, int>(content);
+      dictionary = new Dictionary<string, int>(immutableTrieDictionary);
+
     }
 
     [Benchmark]
@@ -46,6 +50,15 @@ namespace ImmutableTrie.Benchmarks
       for (int i = 0; i < N; i++)
       {
         var value = immutableDictionary[i.ToString()];
+      }
+    }
+
+    [Benchmark]
+    public void DictGet()
+    {
+      for (int i = 0; i < N; i++)
+      {
+        var value = dictionary[i.ToString()];
       }
     }
   }
