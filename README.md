@@ -14,8 +14,8 @@ InsertAt | O(N log32 N)
 RemoveAt | O(N log32 N)
 
 
-## ImmutableTrieDict
-This is an immutable dictionary that's aimed to replaced the use of `ImmutableDictionary`. This collection uses comparable or less memory and provides as 2x speed up in most operation in compare to .NET's `ImmutableDictionary`.This collection is based on [hash array mapped trie](https://en.wikipedia.org/wiki/Hash_array_mapped_trie).
+## ImmutableTrieDictionary
+This is an immutable dictionary that's aimed to replaced the use of `ImmutableDictionary`. This collection uses comparable or less memory and provides as 2x speed up in most operation in compare to .NET's `ImmutableDictionary`. This collection is based on [hash array mapped trie](https://en.wikipedia.org/wiki/Hash_array_mapped_trie).
 
 Methods | Complexity
 --- | ---
