@@ -2,6 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>Immutable collections that use trie as their internal data structure, and provide a direct replacement for the .net's implementation of ImmutableList and ImmutableDictionary</Description>
+    <Authors>Steven Guh</Authors>
+    <Title>ImmutableTrie</Title>
+    <PackageTags>immutable;trie;ImmutableList;ImmutableDictionary</PackageTags>
+    <PackageProjectUrl>https://github.com/stevenguh/ImmutableTrie</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/stevenguh/ImmutableTrie/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/stevenguh/ImmutableTrie</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
