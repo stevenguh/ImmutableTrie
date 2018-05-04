@@ -5,9 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using Xunit;
 
 namespace ImmutableTrie.Tests
@@ -348,31 +346,31 @@ namespace ImmutableTrie.Tests
             enumerator.Dispose();
         }
 
-/*
-        [Fact]
-        [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
-        public void DebuggerAttributesValid()
-        {
-            DebuggerAttributes.ValidateDebuggerDisplayReferences(ImmutableTrieDictionary.Create<int, int>());
-            ImmutableTrieDictionary<string, int> dict = ImmutableTrieDictionary.Create<string, int>().Add("One", 1).Add("Two", 2);
-            DebuggerAttributeInfo info = DebuggerAttributes.ValidateDebuggerTypeProxyProperties(dict);
+        /*
+                [Fact]
+                [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
+                public void DebuggerAttributesValid()
+                {
+                    DebuggerAttributes.ValidateDebuggerDisplayReferences(ImmutableTrieDictionary.Create<int, int>());
+                    ImmutableTrieDictionary<string, int> dict = ImmutableTrieDictionary.Create<string, int>().Add("One", 1).Add("Two", 2);
+                    DebuggerAttributeInfo info = DebuggerAttributes.ValidateDebuggerTypeProxyProperties(dict);
 
-            object rootNode = DebuggerAttributes.GetFieldValue(ImmutableTrieDictionary.Create<string, string>(), "_root");
-            DebuggerAttributes.ValidateDebuggerDisplayReferences(rootNode);
-            PropertyInfo itemProperty = info.Properties.Single(pr => pr.GetCustomAttribute<DebuggerBrowsableAttribute>().State == DebuggerBrowsableState.RootHidden);
-            KeyValuePair<string, int>[] items = itemProperty.GetValue(info.Instance) as KeyValuePair<string, int>[];
-            Assert.Equal(dict, items);
-        }
+                    object rootNode = DebuggerAttributes.GetFieldValue(ImmutableTrieDictionary.Create<string, string>(), "_root");
+                    DebuggerAttributes.ValidateDebuggerDisplayReferences(rootNode);
+                    PropertyInfo itemProperty = info.Properties.Single(pr => pr.GetCustomAttribute<DebuggerBrowsableAttribute>().State == DebuggerBrowsableState.RootHidden);
+                    KeyValuePair<string, int>[] items = itemProperty.GetValue(info.Instance) as KeyValuePair<string, int>[];
+                    Assert.Equal(dict, items);
+                }
 
-        [Fact]
-        [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
-        public static void TestDebuggerAttributes_Null()
-        {
-            Type proxyType = DebuggerAttributes.GetProxyType(ImmutableHashSet.Create<string>());
-            TargetInvocationException tie = Assert.Throws<TargetInvocationException>(() => Activator.CreateInstance(proxyType, (object)null));
-            Assert.IsType<ArgumentNullException>(tie.InnerException);
-        }
- */
+                [Fact]
+                [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
+                public static void TestDebuggerAttributes_Null()
+                {
+                    Type proxyType = DebuggerAttributes.GetProxyType(ImmutableHashSet.Create<string>());
+                    TargetInvocationException tie = Assert.Throws<TargetInvocationException>(() => Activator.CreateInstance(proxyType, (object)null));
+                    Assert.IsType<ArgumentNullException>(tie.InnerException);
+                }
+         */
 
         [Fact]
         public void Clear_NoComparer_ReturnsEmptyWithoutComparer()
@@ -464,10 +462,12 @@ namespace ImmutableTrie.Tests
             }
 
             public string Value { get; private set; }
+
             public override int GetHashCode()
             {
                 return StringComparer.OrdinalIgnoreCase.GetHashCode(this.Value);
             }
+
             public override bool Equals(object obj)
             {
                 return StringComparer.OrdinalIgnoreCase.Equals(this.Value, ((CaseInsensitiveString)obj).Value);

@@ -46,43 +46,28 @@ namespace ImmutableTrie
         /// <summary>
         /// See <see cref="ICollection{T}"/>
         /// </summary>
-        public bool IsReadOnly
-        {
-            get { return true; }
-        }
+        public bool IsReadOnly => true;
 
         /// <summary>
         /// See <see cref="ICollection{T}"/>
         /// </summary>
         /// <returns>The number of elements contained in the <see cref="ICollection{T}"/>.</returns>
-        public int Count
-        {
-            get { return _dictionary.Count; }
-        }
+        public int Count => _dictionary.Count;
 
         /// <summary>
         /// Gets the wrapped dictionary.
         /// </summary>
-        protected IImmutableDictionary<TKey, TValue> Dictionary
-        {
-            get { return _dictionary; }
-        }
+        protected IImmutableDictionary<TKey, TValue> Dictionary => _dictionary;
 
         /// <summary>
         /// See <see cref="ICollection{T}"/>
         /// </summary>
-        public void Add(T item)
-        {
-            throw new NotSupportedException();
-        }
+        public void Add(T item) => throw new NotSupportedException();
 
         /// <summary>
         /// See <see cref="ICollection{T}"/>
         /// </summary>
-        public void Clear()
-        {
-            throw new NotSupportedException();
-        }
+        public void Clear() => throw new NotSupportedException();
 
         /// <summary>
         /// See <see cref="ICollection{T}"/>
@@ -107,26 +92,17 @@ namespace ImmutableTrie
         /// <summary>
         /// See <see cref="ICollection{T}"/>
         /// </summary>
-        public bool Remove(T item)
-        {
-            throw new NotSupportedException();
-        }
+        public bool Remove(T item) => throw new NotSupportedException();
 
         /// <summary>
         /// See <see cref="IEnumerable{T}"/>
         /// </summary>
-        public IEnumerator<T> GetEnumerator()
-        {
-            return _keysOrValues.GetEnumerator();
-        }
+        public IEnumerator<T> GetEnumerator() => _keysOrValues.GetEnumerator();
 
         /// <summary>
         /// See <see cref="System.Collections.IEnumerable"/>
         /// </summary>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         /// <summary>
         /// Copies the elements of the <see cref="ICollection"/> to an <see cref="Array"/>, starting at a particular <see cref="Array"/> index.
@@ -150,20 +126,14 @@ namespace ImmutableTrie
         /// </summary>
         /// <returns>true if access to the <see cref="ICollection"/> is synchronized (thread safe); otherwise, false.</returns>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        bool ICollection.IsSynchronized
-        {
-            get { return true; }
-        }
+        bool ICollection.IsSynchronized => true;
 
         /// <summary>
         /// Gets an object that can be used to synchronize access to the <see cref="ICollection"/>.
         /// </summary>
         /// <returns>An object that can be used to synchronize access to the <see cref="ICollection"/>.</returns>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        object ICollection.SyncRoot
-        {
-            get { return this; }
-        }
+        object ICollection.SyncRoot => this;
     }
 
     /// <summary>
@@ -182,10 +152,7 @@ namespace ImmutableTrie
         /// <summary>
         /// See <see cref="ICollection{T}"/>
         /// </summary>
-        public override bool Contains(TKey item)
-        {
-            return this.Dictionary.ContainsKey(item);
-        }
+        public override bool Contains(TKey item) => this.Dictionary.ContainsKey(item);
     }
 
     /// <summary>

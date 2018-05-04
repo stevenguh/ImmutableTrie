@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Validation;
-using Xunit;
 
 namespace ImmutableTrie.Tests
 {
@@ -38,7 +37,6 @@ namespace ImmutableTrie.Tests
             }
 
             var trieDictionary = dictionary as ImmutableTrieDictionary<TKey, TValue>;
-
 
             throw new NotSupportedException();
         }

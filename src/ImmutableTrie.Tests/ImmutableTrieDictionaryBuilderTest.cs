@@ -5,9 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using Xunit;
 
 namespace ImmutableTrie.Tests
@@ -249,30 +247,30 @@ namespace ImmutableTrie.Tests
             Assert.Equal(5, populated.GetValueOrDefault("a", 1));
         }
 
-/*
-        [Fact]
-        [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
-        public void DebuggerAttributesValid()
-        {
-            DebuggerAttributes.ValidateDebuggerDisplayReferences(ImmutableTrieDictionary.CreateBuilder<string, int>());
-            ImmutableTrieDictionary<int, string>.Builder builder = ImmutableTrieDictionary.CreateBuilder<int, string>();
-            builder.Add(1, "One");
-            builder.Add(2, "Two");
-            DebuggerAttributeInfo info = DebuggerAttributes.ValidateDebuggerTypeProxyProperties(builder);
-            PropertyInfo itemProperty = info.Properties.Single(pr => pr.GetCustomAttribute<DebuggerBrowsableAttribute>().State == DebuggerBrowsableState.RootHidden);
-            KeyValuePair<int, string>[] items = itemProperty.GetValue(info.Instance) as KeyValuePair<int, string>[];
-            Assert.Equal(builder, items);
-        }
+        /*
+                [Fact]
+                [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
+                public void DebuggerAttributesValid()
+                {
+                    DebuggerAttributes.ValidateDebuggerDisplayReferences(ImmutableTrieDictionary.CreateBuilder<string, int>());
+                    ImmutableTrieDictionary<int, string>.Builder builder = ImmutableTrieDictionary.CreateBuilder<int, string>();
+                    builder.Add(1, "One");
+                    builder.Add(2, "Two");
+                    DebuggerAttributeInfo info = DebuggerAttributes.ValidateDebuggerTypeProxyProperties(builder);
+                    PropertyInfo itemProperty = info.Properties.Single(pr => pr.GetCustomAttribute<DebuggerBrowsableAttribute>().State == DebuggerBrowsableState.RootHidden);
+                    KeyValuePair<int, string>[] items = itemProperty.GetValue(info.Instance) as KeyValuePair<int, string>[];
+                    Assert.Equal(builder, items);
+                }
 
-        [Fact]
-        [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
-        public static void TestDebuggerAttributes_Null()
-        {
-            Type proxyType = DebuggerAttributes.GetProxyType(ImmutableHashSet.Create<string>());
-            TargetInvocationException tie = Assert.Throws<TargetInvocationException>(() => Activator.CreateInstance(proxyType, (object)null));
-            Assert.IsType<ArgumentNullException>(tie.InnerException);
-        }
- */
+                [Fact]
+                [SkipOnTargetFramework(TargetFrameworkMonikers.UapAot, "Cannot do DebuggerAttribute testing on UapAot: requires internal Reflection on framework types.")]
+                public static void TestDebuggerAttributes_Null()
+                {
+                    Type proxyType = DebuggerAttributes.GetProxyType(ImmutableHashSet.Create<string>());
+                    TargetInvocationException tie = Assert.Throws<TargetInvocationException>(() => Activator.CreateInstance(proxyType, (object)null));
+                    Assert.IsType<ArgumentNullException>(tie.InnerException);
+                }
+         */
 
         protected override IImmutableDictionary<TKey, TValue> GetEmptyImmutableDictionary<TKey, TValue>()
         {

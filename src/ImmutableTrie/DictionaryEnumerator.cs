@@ -19,34 +19,16 @@ namespace ImmutableTrie
             _inner = inner;
         }
 
-        public DictionaryEntry Entry
-        {
-            get { return new DictionaryEntry(_inner.Current.Key, _inner.Current.Value); }
-        }
+        public DictionaryEntry Entry => new DictionaryEntry(_inner.Current.Key, _inner.Current.Value);
 
-        public object Key
-        {
-            get { return _inner.Current.Key; }
-        }
+        public object Key => _inner.Current.Key;
 
-        public object Value
-        {
-            get { return _inner.Current.Value; }
-        }
+        public object Value => _inner.Current.Value;
 
-        public object Current
-        {
-            get { return this.Entry; }
-        }
+        public object Current => this.Entry;
 
-        public bool MoveNext()
-        {
-            return _inner.MoveNext();
-        }
+        public bool MoveNext() => _inner.MoveNext();
 
-        public void Reset()
-        {
-            _inner.Reset();
-        }
+        public void Reset() => _inner.Reset();
     }
 }
