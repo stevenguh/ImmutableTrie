@@ -23,34 +23,22 @@ namespace ImmutableTrie
                     return false;
                 }
 
-                object result = root.Get(0, comparers.KeyComparer.GetHashCode(key), comparers, key, out TKey actualKey);
-                if (result == NotFound)
-                {
-                    value = default(TValue);
-                    return false;
-                }
-
-                value = (TValue)result;
-                return true;
+                return root.TryGet(0, comparers.KeyComparer.GetHashCode(key), comparers, key, out TKey actualKey, out value);
             }
 
             internal static bool TryGetKey(NodeBase root, Comparers comparers, TKey equalKey, out TKey actualKey)
             {
                 Requires.NotNullAllowStructs(equalKey, nameof(equalKey));
-                if (root == null)
+
+                if (root != null)
                 {
-                    actualKey = equalKey;
-                    return false;
+                    bool result = root.TryGet(0, comparers.KeyComparer.GetHashCode(equalKey), comparers, equalKey, out actualKey, out TValue value);
+                    if (result) { return true; }
                 }
 
-                object result = root.Get(0, comparers.KeyComparer.GetHashCode(equalKey), comparers, equalKey, out actualKey);
-                if (result == NotFound)
-                {
-                    actualKey = equalKey;
-                    return false;
-                }
-
-                return true;
+                // If root is null or key not found with the comparers
+                actualKey = equalKey;
+                return false;
             }
 
             internal static bool ContainsKey(NodeBase root, Comparers comparers, TKey key)

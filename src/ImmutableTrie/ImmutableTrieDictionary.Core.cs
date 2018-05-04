@@ -26,8 +26,6 @@ namespace ImmutableTrie
         internal const int MAX_BITMAP_INDEXED_SIZE = WIDTH / 2; // 16
         internal const int MIN_HASH_ARRAY_MAP_SIZE = WIDTH / 4; // 8
 
-        internal static readonly object NotFound = new object();
-
         /// <summary>
         /// The number of elements stored.
         /// </summary>

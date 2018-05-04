@@ -37,7 +37,7 @@ namespace ImmutableTrie
 
             internal abstract NodeBase Remove(object owner, int shift, int hash, TKey key, Comparers comparers, out OperationResult result);
 
-            internal abstract object Get(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey);
+            internal abstract bool TryGet(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey, out TValue value);
 
             internal abstract IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator();
 
@@ -208,16 +208,18 @@ namespace ImmutableTrie
                 return newSubNode == node ? this : SetNode(owner, _count, idx, newSubNode);
             }
 
-            internal override object Get(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey)
+            internal override bool TryGet(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey, out TValue value)
             {
                 int idx = Mask(hash, shift);
                 NodeBase node = _array[idx];
                 if (node == null)
                 {
                     actualKey = default(TKey);
-                    return NotFound;
+                    value = default(TValue);
+                    return false;
                 }
-                return node.Get(shift + BITS, hash, comparers, key, out actualKey);
+
+                return node.TryGet(shift + BITS, hash, comparers, key, out actualKey, out value);
             }
 
             internal override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new NodeEnumerator(_array);
@@ -238,6 +240,7 @@ namespace ImmutableTrie
                         newArray[j++] = _array[i];
                     }
                 }
+
                 return new BitmapIndexedNode(this.Owner, bitmap, newArray);
             }
 
@@ -334,16 +337,18 @@ namespace ImmutableTrie
                 return editable;
             }
 
-            internal override object Get(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey)
+            internal override bool TryGet(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey, out TValue value)
             {
                 int bit = 1 << Mask(hash, shift);
                 if ((_bitmap & bit) == 0)
                 {
                     actualKey = default(TKey);
-                    return NotFound;
+                    value = default(TValue);
+                    return false;
                 }
+
                 int idx = GetIndex(bit);
-                return _nodes[idx].Get(shift + BITS, hash, comparers, key, out actualKey);
+                return _nodes[idx].TryGet(shift + BITS, hash, comparers, key, out actualKey, out value);
             }
 
             internal override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new NodeEnumerator(_nodes);
@@ -491,17 +496,18 @@ namespace ImmutableTrie
                 }
             }
 
-            internal override object Get(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey)
+            internal override bool TryGet(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey, out TValue value)
             {
                 int idx = IndexOf(key, comparers);
                 if (idx >= 0)
                 {
-                    return _values[idx].Get(shift, hash, comparers, key, out actualKey);
+                    return _values[idx].TryGet(shift, hash, comparers, key, out actualKey, out value);
                 }
                 else
                 {
                     actualKey = default(TKey);
-                    return NotFound;
+                    value = default(TValue);
+                    return false;
                 }
             }
 
@@ -553,17 +559,19 @@ namespace ImmutableTrie
             internal TKey Key { get; private set; }
             internal TValue Value { get; private set; }
 
-            internal override object Get(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey)
+            internal override bool TryGet(int shift, int hash, Comparers comparers, TKey key, out TKey actualKey, out TValue value)
             {
                 if (comparers.KeyComparer.Equals(this.Key, key))
                 {
                     actualKey = this.Key;
-                    return this.Value;
+                    value = this.Value;
+                    return true;
                 }
                 else
                 {
                     actualKey = default(TKey);
-                    return NotFound;
+                    value = default(TValue);
+                    return false;
                 }
             }
 
