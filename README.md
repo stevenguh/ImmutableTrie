@@ -1,8 +1,8 @@
 # Immutable Trie ([nuget](https://www.nuget.org/packages/ImmutableTrie/))
-Immutable collections that use trie as their internal data structure, and provide a direct replacement for the .net's implementation of `ImmutableList` and `ImmutableDictionary`.
+Immutable collections that use trie as their internal data structure, and provide a direct replacement for the .NET's implementation of `ImmutableList` and `ImmutableDictionary`.
 
 ## ImmutableTrieDictionary
-This is an immutable dictionary that's aimed to replaced the use of `ImmutableDictionary`. This collection uses comparable or less memory and provides as 2x speed up in most operation in compare to .NET's `ImmutableDictionary`. This collection is based on [hash array mapped trie](https://en.wikipedia.org/wiki/Hash_array_mapped_trie).
+This is an immutable dictionary that's aimed to replaced the use of `ImmutableDictionary`. This collection uses comparable or less memory and provides at least 2x speed up in most operation comparing to .NET's `ImmutableDictionary`. This collection is based on [hash array mapped trie](https://en.wikipedia.org/wiki/Hash_array_mapped_trie).
 
 A [proposal](https://github.com/dotnet/corefx/issues/29346) was made in [corefx](https://github.com/dotnet/corefx)'s repo to use this data structure as the internal structure of `ImmutableDictionary`.
 
